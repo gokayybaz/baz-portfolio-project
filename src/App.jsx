@@ -1,6 +1,6 @@
 import './App.css'
 import { useState, useEffect, useRef } from 'react'
-import ProfileWidget from './components/ProfileWidget/ProfileWidget'
+import ProfileWidget from './components/ProfileWidget'
 import WelcomeWidget from './components/WelcomeWidget'
 import StatsWidget from './components/StatsWidget'
 import ProjectsSection from './components/ProjectsSection'
