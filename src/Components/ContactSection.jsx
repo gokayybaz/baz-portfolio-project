@@ -1,96 +1,150 @@
-import React from 'react'
+import { useState } from 'react';
+import { supabase } from '../supabaseClient';
 
-const ContactSection = ({ setShowContact }) => {
+function ContactSection() {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    message: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState(null);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setSubmitStatus(null);
+
+    try {
+      // Generate a unique ID
+      const uniqueId = crypto.randomUUID();
+
+      // Submit form data to Supabase
+      const { data, error } = await supabase
+        .from('contact_messages')
+        .insert([
+          {
+            id: uniqueId,
+            name: formData.name,
+            email: formData.email,
+            message: formData.message,
+            created_at: new Date()
+          }
+        ])
+        .select();
+
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+
+      // Show success message
+      setSubmitStatus({
+        type: 'success',
+        message: 'Mesajınız başarıyla gönderildi. En kısa sürede size dönüş yapacağım.'
+      });
+
+      // Clear the form
+      setFormData({ name: '', email: '', message: '' });
+    } catch (error) {
+      console.error('Form submission error:', error);
+      setSubmitStatus({
+        type: 'error',
+        message: 'Mesajınız gönderilirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.'
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
-    <div className="col-span-3 backdrop-filter backdrop-blur-md bg-slate-900/30 border border-slate-700/50 rounded-xl overflow-hidden shadow-sm transition-all duration-500 animate-fade-in">
-      <div className="p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-semibold text-white">İletişim</h2>
-          <button 
-            onClick={() => setShowContact(false)}
-            className="text-gray-400 hover:text-white"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-              <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
-            </svg>
-          </button>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="max-w-4xl mx-auto">
+      <div className="text-center mb-16">
+        <h2 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-blue-500 to-teal-400 inline-block text-transparent bg-clip-text">
+          İletişime Geçin
+        </h2>
+        <p className="text-slate-300 max-w-2xl mx-auto">
+          Proje fikirleri, işbirliği önerileri veya sadece merhaba demek için aşağıdaki formu doldurarak benimle iletişime geçebilirsiniz.
+        </p>
+      </div>
+
+      <div className="bg-slate-900/60 backdrop-blur-lg rounded-xl p-6 md:p-8 shadow-xl border border-slate-800">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <p className="text-gray-300 mb-4">
-              Bir projede birlikte çalışmak veya bir soru sormak için formu doldurabilirsiniz.
-            </p>
-            
-            <div className="space-y-4 mt-6">
-              <div className="flex items-center space-x-3 text-gray-300">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                  <path d="M.05 3.555A2 2 0 0 1 2 2h12a2 2 0 0 1 1.95 1.555L8 8.414.05 3.555ZM0 4.697v7.104l5.803-3.558L0 4.697ZM6.761 8.83l-6.57 4.027A2 2 0 0 0 2 14h12a2 2 0 0 0 1.808-1.144l-6.57-4.027L8 9.586l-1.239-.757Zm3.436-.586L16 11.801V4.697l-5.803 3.546Z"/>
-                </svg>
-                <span>gokaybaz@example.com</span>
-              </div>
-              
-              <div className="flex items-center space-x-3 text-gray-300">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                  <path fillRule="evenodd" d="M1.885.511a1.745 1.745 0 0 1 2.61.163L6.29 2.98c.329.423.445.974.315 1.494l-.547 2.19a.678.678 0 0 0 .178.643l2.457 2.457a.678.678 0 0 0 .644.178l2.189-.547a1.745 1.745 0 0 1 1.494.315l2.306 1.794c.829.645.905 1.87.163 2.611l-1.034 1.034c-.74.74-1.846 1.065-2.877.702a18.634 18.634 0 0 1-7.01-4.42 18.634 18.634 0 0 1-4.42-7.009c-.362-1.03-.037-2.137.703-2.877L1.885.511z"/>
-                </svg>
-                <span>+90 555 123 4567</span>
-              </div>
-              
-              <div className="flex items-center space-x-3 text-gray-300">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                  <path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10zm0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/>
-                </svg>
-                <span>İstanbul, Türkiye</span>
-              </div>
-            </div>
+            <label htmlFor="name" className="block text-sm font-medium text-slate-300 mb-1">
+              İsim
+            </label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              required
+              className="w-full py-3 px-4 bg-slate-800/50 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              placeholder="Adınız Soyadınız"
+            />
           </div>
-          
-          <form className="space-y-4">
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-1">İsim</label>
-              <input 
-                type="text" 
-                id="name" 
-                className="w-full bg-slate-800/60 border border-slate-700/50 rounded-md py-2 px-4 text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
-                placeholder="Adınız"
-              />
+
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-1">
+              E-posta
+            </label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+              className="w-full py-3 px-4 bg-slate-800/50 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              placeholder="ornek@domain.com"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="message" className="block text-sm font-medium text-slate-300 mb-1">
+              Mesaj
+            </label>
+            <textarea
+              id="message"
+              name="message"
+              value={formData.message}
+              onChange={handleChange}
+              required
+              rows="5"
+              className="w-full py-3 px-4 bg-slate-800/50 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              placeholder="Mesajınızı buraya yazın..."
+            ></textarea>
+          </div>
+
+          {submitStatus && (
+            <div className={`p-4 rounded-lg ${submitStatus.type === 'success' ? 'bg-green-900/60 text-green-200' : 'bg-red-900/60 text-red-200'}`}>
+              {submitStatus.message}
             </div>
-            
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1">E-posta</label>
-              <input 
-                type="email" 
-                id="email" 
-                className="w-full bg-slate-800/60 border border-slate-700/50 rounded-md py-2 px-4 text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
-                placeholder="E-posta adresiniz"
-              />
-            </div>
-            
-            <div>
-              <label htmlFor="message" className="block text-sm font-medium text-gray-300 mb-1">Mesaj</label>
-              <textarea 
-                id="message" 
-                rows="4" 
-                className="w-full bg-slate-800/60 border border-slate-700/50 rounded-md py-2 px-4 text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
-                placeholder="Mesajınız..."
-              ></textarea>
-            </div>
-            
-            <button 
-              type="submit" 
-              className="w-full bg-indigo-500 text-white text-sm font-medium rounded-md py-2 px-4 hover:bg-indigo-600 transition-colors duration-300 flex items-center justify-center gap-2"
+          )}
+
+          <div>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className={`w-full py-3 px-6 text-white font-medium rounded-lg transition-all
+                ${isSubmitting
+                  ? 'bg-indigo-700 cursor-wait'
+                  : 'bg-indigo-600 hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-600/20'}`}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                <path d="M15.854.146a.5.5 0 0 1 .11.54l-5.819 14.547a.75.75 0 0 1-1.329.124l-3.178-4.995L.643 7.184a.75.75 0 0 1 .124-1.33L15.314.037a.5.5 0 0 1 .54.11ZM6.636 10.07l2.761 4.338L14.13 2.576 6.636 10.07Zm6.787-8.201L1.591 6.602l4.339 2.76 7.494-7.493Z"/>
-              </svg>
-              Gönder
+              {isSubmitting ? 'Gönderiliyor...' : 'Gönder'}
             </button>
-          </form>
-        </div>
+          </div>
+        </form>
       </div>
     </div>
-  )
+  );
 }
 
-export default ContactSection
+export default ContactSection;
