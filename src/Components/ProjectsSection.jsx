@@ -1,6 +1,33 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
+import { supabase } from '../lib/supabaseClient' // Assuming you have this file set up
 
 const ProjectsSection = ({ setShowProjects }) => {
+  const [projects, setProjects] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('my_projects')
+          .select('*')
+          .order('id', { ascending: false })
+
+        if (error) {
+          throw error
+        }
+
+        setProjects(data || [])
+      } catch (error) {
+        console.error('Error fetching projects:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchProjects()
+  }, [])
+
   return (
     <div className="col-span-3 backdrop-filter backdrop-blur-md bg-slate-900/30 border border-slate-700/50 rounded-xl overflow-hidden shadow-sm transition-all duration-500 animate-fade-in">
       <div className="p-6">
@@ -17,104 +44,53 @@ const ProjectsSection = ({ setShowProjects }) => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {/* Project 1 */}
-          <div className="bg-slate-800/50 border border-slate-700/30 rounded-lg overflow-hidden group hover:border-indigo-500/50 transition-all duration-300">
-            <div className="aspect-video select-none w-full bg-slate-700/30 relative overflow-hidden">
-              <img
-                src="https://github.com/gokayybaz/baz_valorant_app/raw/main/screenshots/desktop/1.png"
-                alt="Baz Valorant App"
-                className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
-              />
+          {loading ? (
+            <div className="col-span-full flex justify-center items-center py-8">
+              <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-indigo-500"></div>
             </div>
-            <div className="p-4">
-              <h3 className="font-medium select-none text-indigo-300">Baz Valorant App</h3>
-              <p className="text-gray-400 select-none text-sm mt-1">ReactJS, TailwindCSS</p>
-              <div className="mt-3 flex gap-2">
-                <a
-                  href="https://baz-valorant-guide.netlify.app/"
-                  className="text-xs select-none bg-slate-700/60 hover:bg-indigo-500/30 px-2 py-1 rounded text-gray-300 transition-colors duration-300"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Canlı Demo
-                </a>
-                <a
-                  href="https://github.com/gokayybaz/baz_valorant_app"
-                  className="text-xs select-none bg-slate-700/60 hover:bg-indigo-500/30 px-2 py-1 rounded text-gray-300 transition-colors duration-300"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  GitHub
-                </a>
+          ) : projects.length === 0 ? (
+            <div className="col-span-full text-center py-8 text-gray-400">
+              Henüz proje eklenmemiş.
+            </div>
+          ) : (
+            projects.map((project) => (
+              <div key={project.id} className="bg-slate-800/50 border border-slate-700/30 rounded-lg overflow-hidden group hover:border-indigo-500/50 transition-all duration-300">
+                <div className="aspect-video select-none w-full bg-slate-700/30 relative overflow-hidden">
+                  <img
+                    src={project.image_url || "https://placehold.co/600x400/1e293b/e2e8f0?text=Proje"}
+                    alt={project.title}
+                    className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
+                  />
+                </div>
+                <div className="p-4">
+                  <h3 className="font-medium select-none text-indigo-300">{project.title}</h3>
+                  <p className="text-gray-400 select-none text-sm mt-1">{project.technologies}</p>
+                  <div className="mt-3 flex gap-2">
+                    {project.demo_url && (
+                      <a
+                        href={project.demo_url}
+                        className="text-xs select-none bg-slate-700/60 hover:bg-indigo-500/30 px-2 py-1 rounded text-gray-300 transition-colors duration-300"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Canlı Demo
+                      </a>
+                    )}
+                    {project.github_url && (
+                      <a
+                        href={project.github_url}
+                        className="text-xs select-none bg-slate-700/60 hover:bg-indigo-500/30 px-2 py-1 rounded text-gray-300 transition-colors duration-300"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        GitHub
+                      </a>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-
-          {/* Project 2 */}
-          <div className="bg-slate-800/50 border border-slate-700/30 rounded-lg overflow-hidden group hover:border-indigo-500/50 transition-all duration-300">
-            <div className="aspect-video w-full bg-slate-700/30 relative overflow-hidden">
-              <img
-                src="https://placehold.co/600x400/1e293b/e2e8f0?text=Proje+2"
-                alt="Project 2"
-                className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
-              />
-            </div>
-            <div className="p-4">
-              <h3 className="font-medium text-indigo-300">Task Manager App</h3>
-              <p className="text-gray-400 text-sm mt-1">Vue.js, Firebase</p>
-              <div className="mt-3 flex gap-2">
-                <a
-                  href="#"
-                  className="text-xs bg-slate-700/60 hover:bg-indigo-500/30 px-2 py-1 rounded text-gray-300 transition-colors duration-300"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Demo
-                </a>
-                <a
-                  href="#"
-                  className="text-xs bg-slate-700/60 hover:bg-indigo-500/30 px-2 py-1 rounded text-gray-300 transition-colors duration-300"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  GitHub
-                </a>
-              </div>
-            </div>
-          </div>
-
-          {/* Project 3 */}
-          <div className="bg-slate-800/50 border border-slate-700/30 rounded-lg overflow-hidden group hover:border-indigo-500/50 transition-all duration-300">
-            <div className="aspect-video w-full bg-slate-700/30 relative overflow-hidden">
-              <img
-                src="https://placehold.co/600x400/1e293b/e2e8f0?text=Proje+3"
-                alt="Project 3"
-                className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
-              />
-            </div>
-            <div className="p-4">
-              <h3 className="font-medium text-indigo-300">Portfolio Website</h3>
-              <p className="text-gray-400 text-sm mt-1">React, Tailwind CSS</p>
-              <div className="mt-3 flex gap-2">
-                <a
-                  href="#"
-                  className="text-xs bg-slate-700/60 hover:bg-indigo-500/30 px-2 py-1 rounded text-gray-300 transition-colors duration-300"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Demo
-                </a>
-                <a
-                  href="#"
-                  className="text-xs bg-slate-700/60 hover:bg-indigo-500/30 px-2 py-1 rounded text-gray-300 transition-colors duration-300"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  GitHub
-                </a>
-              </div>
-            </div>
-          </div>
+            ))
+          )}
         </div>
       </div>
     </div>
