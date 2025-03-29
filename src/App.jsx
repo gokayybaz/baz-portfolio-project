@@ -1,154 +1,173 @@
 import './App.css'
 import { useState, useEffect, useRef } from 'react'
+import React from 'react'
+
+// Routing
+import { Routes, Route, Navigate, Outlet } from 'react-router-dom'
+
+// Context Providers
+import { AuthProvider } from './context/AuthContext'
+
+// Layout Components
+import AnimatedBackground from './components/AnimatedBackground'
+import ScrollDownIndicator from './components/ScrollDownIndicator'
+
+// Page Components
+import AdminPanel from './components/AdminPanel'
+import LoginPage from './Components/LoginPage'
+import AdminProtectedRoute from './Components/AdminProtectedRoute'
+
+// Section Components
 import ProfileWidget from './components/ProfileWidget'
 import WelcomeWidget from './components/WelcomeWidget'
 import StatsWidget from './components/StatsWidget'
 import ProjectsSection from './components/ProjectsSection'
 import ContactSection from './components/ContactSection'
-import AnimatedBackground from './components/AnimatedBackground'
-import ScrollDownIndicator from './components/ScrollDownIndicator'
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import LoginPage from './components/LoginPage';
-import AdminPanel from './components/AdminPanel';
-import ProtectedRoute from './components/ProtectedRoute';
-import { AuthProvider } from './context/AuthContext';
 
-function App() {
-  // Animation states
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [activeWidget, setActiveWidget] = useState(null);
-  const [activeSection, setActiveSection] = useState('hero');
+// Portfolio component - extracted from the previous function body
+function Portfolio() {
+  // State management
+  const [isLoaded, setIsLoaded] = useState(false)
+  const [activeWidget, setActiveWidget] = useState(null)
+  const [activeSection, setActiveSection] = useState('hero')
 
-  // Section refs
-  const heroRef = useRef(null);
-  const projectsRef = useRef(null);
-  const contactRef = useRef(null);
+  // References to sections for scrolling and observation
+  const sectionRefs = {
+    hero: useRef(null),
+    projects: useRef(null),
+    contact: useRef(null)
+  }
 
-  // Scroll to section function
-  const scrollToSection = (ref) => {
-    ref.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  // Smooth scroll to section helper
+  const scrollToSection = (sectionName) => {
+    sectionRefs[sectionName]?.current?.scrollIntoView({ behavior: 'smooth' })
+  }
 
+  // Handle initial loading animation and section observation
   useEffect(() => {
-    // Initial loading animation
-    setTimeout(() => setIsLoaded(true), 600);
+    // Trigger loading animation after short delay
+    const loadTimer = setTimeout(() => setIsLoaded(true), 600)
 
-    // Set up intersection observers for each section
-    const options = {
+    // Configure intersection observer
+    const observerOptions = {
       root: null,
       rootMargin: '0px',
-      threshold: 0.5, // When 50% of the section is visible
-    };
+      threshold: 0.5
+    }
 
-    const observerCallback = (entries) => {
+    // Observer callback to update active section
+    const handleIntersection = (entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
-          setActiveSection(entry.target.dataset.section);
+          setActiveSection(entry.target.dataset.section)
         }
-      });
-    };
+      })
+    }
 
-    const observer = new IntersectionObserver(observerCallback, options);
+    // Set up observer for each section
+    const observer = new IntersectionObserver(handleIntersection, observerOptions)
+    Object.values(sectionRefs).forEach(ref => {
+      if (ref.current) observer.observe(ref.current)
+    })
 
-    if (heroRef.current) observer.observe(heroRef.current);
-    if (projectsRef.current) observer.observe(projectsRef.current);
-    if (contactRef.current) observer.observe(contactRef.current);
-
+    // Cleanup on unmount
     return () => {
-      if (heroRef.current) observer.unobserve(heroRef.current);
-      if (projectsRef.current) observer.unobserve(projectsRef.current);
-      if (contactRef.current) observer.unobserve(contactRef.current);
-    };
-  }, []);
+      clearTimeout(loadTimer)
+      observer.disconnect()
+    }
+  }, [])
 
-  // Transition style based on active section - revert duration from 500ms to 1000ms
+  // Get transition style based on active section
   const getSectionStyle = (sectionName) => {
-    const isActive = activeSection === sectionName;
-    const baseTransition = 'transition-all duration-1000';
-    const activeStyle = 'opacity-100 scale-100';
-    const inactiveStyle = 'opacity-0 scale-95';
-
-    return `${baseTransition} ${isActive ? activeStyle : inactiveStyle}`;
-  };
+    return `transition-opacity duration-500 ${activeSection === sectionName ? 'opacity-100' : 'opacity-50'}`
+  }
 
   return (
-    <AuthProvider>
-      <Router>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/admin" element={<ProtectedRoute />}>
-            <Route index element={<AdminPanel />} />
-          </Route>
-          <Route path="/" element={
-            <div className="App bg-slate-900 text-white">
-              <div className='w-full min-h-screen bg-slate-950 text-white overflow-y-auto relative'>
-                {/* Animated background elements */}
-                <AnimatedBackground />
+    <div className="App">
+      <div className="w-full min-h-screen bg-slate-950 text-white overflow-y-auto relative">
+        {/* Animated background */}
+        <AnimatedBackground />
 
-                {/* Content */}
-                <main className='relative z-10 container mx-auto px-4 py-8'>
-                  {/* Hero section with widgets - revert mb-8 to mb-16 */}
-                  <section
-                    data-section="hero"
-                    ref={heroRef}
-                    className={`min-h-screen flex flex-col items-center justify-center mb-16 ${getSectionStyle('hero')}`}>
-                    <div className={`grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-6xl mx-auto transition-all duration-500 transform ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
-                      {/* Profile Widget */}
-                      <ProfileWidget
-                        activeWidget={activeWidget}
-                        setActiveWidget={setActiveWidget}
-                        className="mx-auto w-full max-w-sm"
-                      />
-
-                      {/* Welcome Widget */}
-                      <WelcomeWidget
-                        activeWidget={activeWidget}
-                        setActiveWidget={setActiveWidget}
-                        className="mx-auto w-full max-w-sm"
-                      />
-
-                      {/* Stats Widget */}
-                      <StatsWidget isLoaded={isLoaded} className="mx-auto w-full max-w-sm" />
-                    </div>
-
-                    {/* Scroll Down Indicator after hero section */}
-                    <div className={`mt-12 transition-all duration-500 ${isLoaded ? 'opacity-100' : 'opacity-0'} mx-auto`} style={{ transitionDelay: '600ms' }}>
-                      <ScrollDownIndicator targetRef={projectsRef} />
-                    </div>
-                  </section>
-
-                  {/* Projects Section - revert py-8 to py-16 */}
-                  <section
-                    data-section="projects"
-                    ref={projectsRef}
-                    className={`min-h-screen py-16 flex flex-col items-center ${getSectionStyle('projects')}`}
-                    style={{ transitionDelay: '150ms' }}>
-                    <ProjectsSection />
-
-                    {/* Scroll Down Indicator after projects section */}
-                    <div className="mt-8">
-                      <ScrollDownIndicator targetRef={contactRef} />
-                    </div>
-                  </section>
-
-                  {/* Contact Section - revert py-8 to py-16 */}
-                  <section
-                    data-section="contact"
-                    ref={contactRef}
-                    className={`min-h-screen py-16 ${getSectionStyle('contact')}`}
-                    style={{ transitionDelay: '150ms' }}>
-                    <ContactSection />
-                  </section>
-                </main>
-              </div>
+        {/* Main content */}
+        <main className="relative z-10 container mx-auto px-4 py-8">
+          {/* Hero section */}
+          <section
+            data-section="hero"
+            ref={sectionRefs.hero}
+            className={`min-h-screen flex flex-col items-center justify-center mb-16 ${getSectionStyle('hero')}`}
+          >
+            <div
+              className={`grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-6xl mx-auto 
+                transition-all duration-500 transform ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
+                }`}
+            >
+              <ProfileWidget
+                activeWidget={activeWidget}
+                setActiveWidget={setActiveWidget}
+                className="mx-auto w-full max-w-sm"
+              />
+              <WelcomeWidget
+                activeWidget={activeWidget}
+                setActiveWidget={setActiveWidget}
+                className="mx-auto w-full max-w-sm"
+              />
+              <StatsWidget
+                isLoaded={isLoaded}
+                className="mx-auto w-full max-w-sm"
+              />
             </div>
-          } />
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
-      </Router>
-    </AuthProvider>
-  );
+
+            {/* Scroll indicator */}
+            <div
+              className={`mt-12 transition-all duration-500 ${isLoaded ? 'opacity-100' : 'opacity-0'
+                } mx-auto`}
+              style={{ transitionDelay: '600ms' }}
+            >
+              <ScrollDownIndicator targetRef={sectionRefs.projects} />
+            </div>
+          </section>
+
+          {/* Projects section */}
+          <section
+            data-section="projects"
+            ref={sectionRefs.projects}
+            className={`min-h-screen py-16 flex flex-col items-center ${getSectionStyle('projects')}`}
+            style={{ transitionDelay: '150ms' }}
+          >
+            <ProjectsSection />
+            <div className="mt-8">
+              <ScrollDownIndicator targetRef={sectionRefs.contact} />
+            </div>
+          </section>
+
+          {/* Contact section */}
+          <section
+            data-section="contact"
+            ref={sectionRefs.contact}
+            className={`min-h-screen py-16 ${getSectionStyle('contact')}`}
+            style={{ transitionDelay: '150ms' }}
+          >
+            <ContactSection />
+          </section>
+        </main>
+      </div>
+    </div>
+  )
 }
 
-export default App;
+function App() {
+  return (
+    <AuthProvider>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/admin" element={<AdminProtectedRoute />}>
+          <Route index element={<AdminPanel />} />
+        </Route>
+        <Route path="/" element={<Portfolio />} />
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
+    </AuthProvider>
+  )
+}
+
+export default App
