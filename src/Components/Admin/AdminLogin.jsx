@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../../context/AuthContext'
 
-const LoginPage = () => {
+const AdminLogin = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState(null);
@@ -96,4 +96,4 @@ const LoginPage = () => {
     );
 };
 
-export default LoginPage;
+export default AdminLogin;

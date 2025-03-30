@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Outlet, Navigate, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 
 function AdminProtectedRoute() {
     const { isAuthenticated, loading, user } = useAuth();
